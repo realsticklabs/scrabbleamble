@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrambled Word Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .word-box {
+            font-size: 2em;
+            margin: 20px;
+        }
+        .timer {
+            font-size: 1.2em;
+            color: #555;
+        }
+        input {
+            font-size: 1em;
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Scrambled Word Game</h1>
+        <div class="word-box" id="scrambledWord">Loading...</div>
+        <div class="timer" id="timer">Time: 0.00s</div>
+        <input type="text" id="guessInput" placeholder="Your guess here" />
+        <button onclick="submitGuess()">Submit</button>
+        <div id="score">Score: 0</div>
+    </div>
+
+    <script>
+        let words = [];
+        let currentWord = "";
+        let startTime = 0;
+        let score = 0;
+
+        // Fetch words from words.txt file
+        fetch('words.txt')
+            .then(response => response.text())
+            .then(data => {
+                words = data.split('\n').map(word => word.trim()).filter(word => word.length > 0);
+                loadNewWord(); // Start the game after words are loaded
+                requestAnimationFrame(updateTimer); // Start the timer
+            })
+            .catch(err => console.error('Error loading word list:', err));
+
+        function shuffleWord(word) {
+            const shuffled = word.split('').sort(() => Math.random() - 0.5).join('');
+            return shuffled === word ? shuffleWord(word) : shuffled; // Ensure it's actually scrambled
+        }
+
+        function loadNewWord() {
+            const randomIndex = Math.floor(Math.random() * words.length);
+            currentWord = words[randomIndex];
+            document.getElementById("scrambledWord").innerText = shuffleWord(currentWord);
+            document.getElementById("guessInput").value = "";
+            startTime = performance.now(); // Start timer
+        }
+
+        function submitGuess() {
+            const guess = document.getElementById("guessInput").value.trim().toLowerCase();
+            if (guess === currentWord) {
+                const elapsed = (performance.now() - startTime) / 1000;
+                const points = Math.max(100 - Math.floor(elapsed * 10), 0); // Score based on speed
+                score += points;
+                document.getElementById("score").innerText = `Score: ${score}`;
+                loadNewWord(); // Load the next word
+            } else {
+                alert("Try again!");
+            }
+        }
+
+        function updateTimer() {
+            const elapsed = (performance.now() - startTime) / 1000;
+            document.getElementById("timer").innerText = `Time: ${elapsed.toFixed(2)}s`;
+            requestAnimationFrame(updateTimer);
+        }
+    </script>
+</body>
+</html>
